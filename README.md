@@ -12,7 +12,7 @@ Make sure you have the following installed:
 
 - QEMU with RISC-V support  
   Install via [Homebrew](https://brew.sh):
-  ```bash
+```bash
   brew install qemu
 ```
 
