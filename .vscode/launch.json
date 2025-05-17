@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/0x/Documents/Software/compressv/source",
+      "program": "/Users/0x/Documents/Software/compressv/source/build/Debug/outDebug"
+    }
+  ]
+}
