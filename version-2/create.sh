@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Creating bare-metal RISC-V 2D FFT project files (Removing unsupported -mno-gpopt)..."
+echo "Creating bare-metal RISC-V 2D FFT project files (Adding math and GCC runtime libs)..."
 
 # --- 1. _start.s ---
 cat << 'EOF' > _start.s
@@ -340,9 +340,10 @@ cat << 'EOF' > fft_2d.c
 
 // Define a maximum dimension for the FFT.
 // This is used for the static transpose buffer.
-// If your image size is larger, this will cause a stack overflow or buffer overflow.
-// Set this to your maximum expected (rows or cols). e.g., 256 for a 256x256 image.
-#define MAX_FFT_DIM 256
+// Setting it to a smaller, more manageable size (e.g., 32)
+// to avoid "relocation truncated to fit" errors for now.
+// If you need larger FFTs, you'll need dynamic memory allocation.
+#define MAX_FFT_DIM 32
 // The temporary buffer size for transpose will be MAX_FFT_DIM * MAX_FFT_DIM
 // Ensure your BSS/data section can accommodate this.
 static cplx_double temp_transpose_buffer[MAX_FFT_DIM * MAX_FFT_DIM];
@@ -354,9 +355,10 @@ void fft_2d(int rows, int cols, cplx_double *data, int inverse) {
         // This avoids errors if uart.h isn't included or UART_H isn't defined
         #ifdef UART_H
         uart_puts("Error: Image dimensions exceed MAX_FFT_DIM in fft_2d.c!\n");
+        uart_puts("Please increase MAX_FFT_DIM or reduce image size.\n");
         #endif
         // In bare-metal, you might halt or return an error code.
-        return;
+        while(1); // Halt program if dimensions exceed buffer
     }
 
     // 1. Perform 1D FFT on each row
@@ -406,6 +408,7 @@ cat << 'EOF' > main.c
 #include "uart.h" // For bare-metal console output
 
 // Define your image dimensions (must be powers of 2)
+// These should be <= MAX_FFT_DIM defined in fft_2d.c
 #define IMAGE_ROWS 16
 #define IMAGE_COLS 16
 
@@ -616,10 +619,11 @@ ARCH_FLAGS = -march=rv64gcv -mabi=lp64d
 # -fomit-frame-pointer: Often used in embedded to save space
 # -mno-relax: Crucial for RISC-V bare-metal to prevent certain linker optimizations that cause HI20 errors
 # Removed -mno-gpopt as it was unrecognized by your toolchain
-CFLAGS = -nostdlib -nostartfiles -ffreestanding $(ARCH_FLAGS) -O2 -Wall -I. -D__riscv_vector -fno-builtin -fomit-frame-pointer -mno-relax
+# -mcmodel=large: Explicitly set code model to large to address HI20 issues for larger binaries
+CFLAGS = -nostdlib -nostartfiles -ffreestanding $(ARCH_FLAGS) -O2 -Wall -I. -D__riscv_vector -fno-builtin -fomit-frame-pointer -mno-relax -mcmodel=large
 
 # --- Assembler Flags ---
-ASFLAGS = $(ARCH_FLAGS) -mno-relax
+ASFLAGS = $(ARCH_FLAGS) -mno-relax -mcmodel=large
 
 # --- Linker Flags ---
 # -T: Specify linker script
@@ -627,7 +631,10 @@ ASFLAGS = $(ARCH_FLAGS) -mno-relax
 # -nodefaultlibs: Prevents linking against standard libraries like libgcc, libc (we are bare-metal)
 # -mno-relax: Matches compiler flag for consistent relocation handling
 # Removed -mno-gpopt as it was unrecognized by your toolchain
-LDFLAGS = -T riscv_baremetal.ld $(ARCH_FLAGS) -nostartfiles -nodefaultlibs -mno-relax
+# -mcmodel=large: Matches compiler flag for consistent code model
+# -lm: Link with the math library (for sin, cos, etc.)
+# -lgcc: Link with the GCC runtime support library (for __muldc3, etc.)
+LDFLAGS = -T riscv_baremetal.ld $(ARCH_FLAGS) -nostartfiles -nodefaultlibs -mno-relax -mcmodel=large
 
 # --- Source Files ---
 SRCS = main.c fft_1d.c fft_2d.c uart.c _start.s
@@ -648,8 +655,8 @@ all: $(TARGET).elf
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 # --- Linking Rule ---
-$(TARGET).elf: $(OBJS) riscv_baremetal.ld
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
+$(TARGET).elf: $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -lm -lgcc -o $@ # Link math and gcc runtime libraries here
 
 # --- Post-build Steps (Optional) ---
 # Create a raw binary for flashing (e.g., for QEMU or actual hardware)
@@ -671,13 +678,16 @@ echo "Created Makefile"
 echo "All files generated successfully!"
 echo "--------------------------------------------------------------------------------"
 echo "### **Next Steps:**"
-echo "1.  **IMPORTANT:** Review 'uart.c' and 'riscv_baremetal.ld'."
-echo "    -   Adjust **'UART_BASE_ADDRESS'** in 'uart.c' to match your board's UART peripheral address."
-echo "    -   Adjust **'ORIGIN'** and **'LENGTH'** for **'RAM'** in 'riscv_baremetal.ld' to match your specific board's memory map."
+echo "1.  **Run the script:** `./create_project.sh` (this will regenerate all files)."
 echo "2.  **Clean previous builds:** Run `make clean`."
 echo "3.  **Compile the project:** Run `make` in this directory."
-echo "4.  **Run with QEMU (example):**"
+echo "    * The `R_RISCV_HI20` errors should be resolved by `-mcmodel=large`."
+echo "    * The `undefined reference` errors for `sin`, `cos`, and `__muldc3` should be resolved by linking `-lm` and `-lgcc`."
+echo "4.  **Review 'uart.c' and 'riscv_baremetal.ld' for your specific board.**"
+echo "    -   Adjust **'UART_BASE_ADDRESS'** in 'uart.c'."
+echo "    -   Adjust **'ORIGIN'** and **'LENGTH'** for **'RAM'** in 'riscv_baremetal.ld'."
+echo "5.  **Run with QEMU (example):**"
 echo "    `qemu-system-riscv64 -M sifive_u -bios none -kernel fft_2d_baremetal.elf -nographic -serial stdio`"
 echo "    (Adjust `-M sifive_u` to your QEMU machine type if different, e.g., `-M virt`)"
-echo "5.  **For real hardware:** Flash the `fft_2d_baremetal.bin` file to your board."
+echo "6.  **For real hardware:** Flash the `fft_2d_baremetal.bin` file to your board."
 echo "--------------------------------------------------------------------------------"

@@ -2,6 +2,7 @@
 #include "uart.h" // For bare-metal console output
 
 // Define your image dimensions (must be powers of 2)
+// These should be <= MAX_FFT_DIM defined in fft_2d.c
 #define IMAGE_ROWS 16
 #define IMAGE_COLS 16
 

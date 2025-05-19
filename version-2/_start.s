@@ -1,6 +1,8 @@
 .section .text.init,"ax",@progbits
 .global _start
 _start:
+_start:
+
     /* Set up global pointer */
     .option push
     .option norelax

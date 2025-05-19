@@ -24,10 +24,11 @@ ARCH_FLAGS = -march=rv64gcv -mabi=lp64d
 # -fomit-frame-pointer: Often used in embedded to save space
 # -mno-relax: Crucial for RISC-V bare-metal to prevent certain linker optimizations that cause HI20 errors
 # Removed -mno-gpopt as it was unrecognized by your toolchain
-CFLAGS = -nostdlib -nostartfiles -ffreestanding $(ARCH_FLAGS) -O2 -Wall -I. -D__riscv_vector -mcmodel=large -fno-builtin -fomit-frame-pointer -mno-relax
+# -mcmodel=large: Explicitly set code model to large to address HI20 issues for larger binaries
+CFLAGS = -nostdlib -nostartfiles -ffreestanding $(ARCH_FLAGS) -O2 -Wall -I. -D__riscv_vector -fno-builtin -fomit-frame-pointer -mno-relax -mcmodel=large
 
 # --- Assembler Flags ---
-ASFLAGS = $(ARCH_FLAGS) -mno-relax 
+ASFLAGS = $(ARCH_FLAGS) -mno-relax
 
 # --- Linker Flags ---
 # -T: Specify linker script
@@ -35,7 +36,10 @@ ASFLAGS = $(ARCH_FLAGS) -mno-relax
 # -nodefaultlibs: Prevents linking against standard libraries like libgcc, libc (we are bare-metal)
 # -mno-relax: Matches compiler flag for consistent relocation handling
 # Removed -mno-gpopt as it was unrecognized by your toolchain
-LDFLAGS = -T riscv_baremetal.ld -lm -lgcc -mcmodel=large $(ARCH_FLAGS) -nostartfiles -nodefaultlibs -mno-relax
+# -mcmodel=large: Matches compiler flag for consistent code model
+# -lm: Link with the math library (for sin, cos, etc.)
+# -lgcc: Link with the GCC runtime support library (for __muldc3, etc.)
+LDFLAGS = -T riscv_baremetal.ld $(ARCH_FLAGS) -nostartfiles -nodefaultlibs -mno-relax -mcmodel=large
 
 # --- Source Files ---
 SRCS = main.c fft_1d.c fft_2d.c uart.c _start.s
@@ -56,8 +60,8 @@ all: $(TARGET).elf
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 # --- Linking Rule ---
-$(TARGET).elf: $(OBJS) riscv_baremetal.ld
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
+$(TARGET).elf: $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -lm -lgcc -o $@ # Link math and gcc runtime libraries here
 
 # --- Post-build Steps (Optional) ---
 # Create a raw binary for flashing (e.g., for QEMU or actual hardware)

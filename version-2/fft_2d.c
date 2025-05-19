@@ -3,9 +3,10 @@
 
 // Define a maximum dimension for the FFT.
 // This is used for the static transpose buffer.
-// If your image size is larger, this will cause a stack overflow or buffer overflow.
-// Set this to your maximum expected (rows or cols). e.g., 256 for a 256x256 image.
-#define MAX_FFT_DIM 256
+// Setting it to a smaller, more manageable size (e.g., 32)
+// to avoid "relocation truncated to fit" errors for now.
+// If you need larger FFTs, you'll need dynamic memory allocation.
+#define MAX_FFT_DIM 32
 // The temporary buffer size for transpose will be MAX_FFT_DIM * MAX_FFT_DIM
 // Ensure your BSS/data section can accommodate this.
 static cplx_double temp_transpose_buffer[MAX_FFT_DIM * MAX_FFT_DIM];
@@ -17,9 +18,10 @@ void fft_2d(int rows, int cols, cplx_double *data, int inverse) {
         // This avoids errors if uart.h isn't included or UART_H isn't defined
         #ifdef UART_H
         uart_puts("Error: Image dimensions exceed MAX_FFT_DIM in fft_2d.c!\n");
+        uart_puts("Please increase MAX_FFT_DIM or reduce image size.\n");
         #endif
         // In bare-metal, you might halt or return an error code.
-        return;
+        while(1); // Halt program if dimensions exceed buffer
     }
 
     // 1. Perform 1D FFT on each row

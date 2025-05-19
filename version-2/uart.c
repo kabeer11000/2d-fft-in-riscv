@@ -1,35 +1,24 @@
 #include "uart.h"
 
-// !!! IMPORTANT: Adjust this base address for your specific RISC-V board's UART !!!
-// Common for SiFive Freedom E310/U540, or QEMU -M sifive_u
-#define UART_BASE_ADDRESS 0x10000000
+#define UART_BASE_ADDRESS 0x10000000UL
 
-// UART Register Offsets (typical 16550-compatible UART)
+// Offsets for 16550 UART with 8-bit spacing
 #define UART_THR   (UART_BASE_ADDRESS + 0x00) // Transmit Holding Register
-#define UART_LSR   (UART_BASE_ADDRESS + 0x05 * 4) // Line Status Register (Note: often offset by 4*register_index)
+#define UART_LSR   (UART_BASE_ADDRESS + 0x05) // Line Status Register
 
-// Line Status Register bits
-#define UART_LSR_TX_EMPTY (1 << 5) // Transmit Holding Register Empty
+#define UART_LSR_TX_EMPTY (1 << 5)
 
-// Simple memory-mapped register access
-#define UART_REG(reg) (*(volatile uint8_t *)(reg))
+#define UART_REG(addr) (*(volatile uint8_t *)(addr))
 
-// Function to initialize UART (basic, assuming default configuration or handled externally)
 void uart_init(void) {
-    // For a real UART, you'd set baud rate, enable FIFOs, etc. here.
-    // E.g., disable interrupts, set DLAB, write DLL/DLH, clear DLAB.
-    // For simplicity, we assume a ready-to-use state.
+    // QEMU UART is pre-configured — nothing to do
 }
 
-// Transmit a single character
 void uart_putc(char c) {
-    // Wait until Transmit Holding Register is empty
     while (!(UART_REG(UART_LSR) & UART_LSR_TX_EMPTY));
-    // Write the character
     UART_REG(UART_THR) = c;
 }
 
-// Transmit a null-terminated string
 void uart_puts(const char* s) {
     while (*s) {
         uart_putc(*s++);
