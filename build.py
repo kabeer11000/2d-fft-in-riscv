@@ -14,7 +14,7 @@ BUILD_DIR = "build/"
 RAW_DATA_HEADER = os.path.join(SOURCE_DIR, "image_data.h")
 C_SOURCE_FILE = os.path.join(SOURCE_DIR, "main.c")
 # File to provide dummy bare-metal symbols (__errno)
-BARE_METAL_SYMBOLS_FILE = os.path.join(SOURCE_DIR, "bare_metal_symbols.c")
+BARE_METAL_SYMBOLS_FILE = os.path.join(SOURCE_DIR, "entry.s")
 
 
 # Base name for the compiled executable
@@ -37,7 +37,7 @@ COMPILER_PATH = "riscv64-unknown-elf-gcc"
 # -o ...: Output file name
 # -lm: Link the math library (necessary for sinf/cosf/sqrtf)
 # -Wl,--no-relax: Linker flag, --no-relax can sometimes be needed for bare-metal/linking order
-COMPILER_FLAGS = "-O2 -Wall -nostdlib -march=rv64gv -T link.ld -mabi=lp64d -o {} {} {} -lm -Wl,--no-relax".format(OUTPUT_EXECUTABLE_PATH, C_SOURCE_FILE, BARE_METAL_SYMBOLS_FILE)
+COMPILER_FLAGS = "-O2 -Wall -mcmodel=medany -nostdlib -march=rv64gv -T link.ld -mabi=lp64d -o {} {} {} -lm -Wl,--no-relax".format(OUTPUT_EXECUTABLE_PATH, C_SOURCE_FILE, BARE_METAL_SYMBOLS_FILE)
 
 # QEMU flags for the 'virt' machine with vector extension enabled
 # -machine virt: Use the generic 'virt' machine

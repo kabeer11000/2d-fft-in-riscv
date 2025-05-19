@@ -1,11 +1,13 @@
-CXX = riscv64-linux-elf-gcc
-CXXFLAGS = -O3 -march=rv64gcv -mabi=lp64d -std=c++17 -I.
+CXX = riscv64-unknown-elf-gcc
+CXXFLAGS = -O3 -march=rv64gcv -mabi=lp64d -std=c11 -I.
 
-all: http_fft
+all: fft_image
 
-http_fft: http_fft.cpp lodepng.h link.ld
-	$(CXX) $(CXXFLAGS) http_fft.cpp -o http_fft \
-	  -static -Wl,-T,link.ld -lpthread
+fft_image: source/fft.c source/fft.h link.ld
+	$(CXX) $(CXXFLAGS) source/fft.c -o fft_image \
+	  -static -Wl,-T,link.ld -lm
 
 clean:
-	rm -f http_fft
+	rm -f fft_image
+
+.PHONY: all clean
