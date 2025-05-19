@@ -1,8 +1,8 @@
 #include "fft_1d_rvv.h"
 #include "complex.h"
 #include "math_baremetal.h" // For sin/cos lookup and PI
-#include <riscv_vector.h>   // RISC-V Vector Extension intrinsics
 #include <string.h>         // Potentially for memcpy if needed
+#include "riscv_vector.h"
 
 void bit_reverse_f32(complex_f32 *data, int n) {
     int i, j, k;

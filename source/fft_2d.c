@@ -1,3 +1,4 @@
+#include "riscv_vector.h"   
 #include "fft_2d.h"
 #include "fft_1d_rvv.h"
 #include "complex.h"

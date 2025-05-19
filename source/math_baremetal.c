@@ -1,3 +1,4 @@
+#include "riscv_vector.h"   
 #include "math_baremetal.h"
 #include <stdint.h> // For uint32_t
 

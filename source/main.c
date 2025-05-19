@@ -27,6 +27,7 @@ void uart_puts(const char *str)
 }
 
 // Include image data and FFT headers
+#include "riscv_vector.h"   
 #include "image_data.h"
 #include "complex.h"
 #include "math_baremetal.h" // For init_trig_tables and float_to_string

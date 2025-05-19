@@ -3,6 +3,7 @@
 
 #include "complex.h"
 #include <stdint.h>
+#include "riscv_vector.h"   
 
 void fft_1d_rvv_f32(complex_f32 *data, int n, int inverse);
 

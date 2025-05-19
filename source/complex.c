@@ -1,3 +1,4 @@
+#include "riscv_vector.h"   
 #include "complex.h"
 
 complex_f32 complex_add(complex_f32 a, complex_f32 b) {
