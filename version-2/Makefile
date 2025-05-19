@@ -10,7 +10,8 @@ OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 
 # --- Architecture Flags ---
 # As per your request: rv64gcv for architecture, lp64d for ABI
-ARCH_FLAGS = -march=rv64gcv -mabi=lp64d
+ARCH_FLAGS = -march=rv64imafdcv_zvfh -mabi=lp64d
+
 
 # --- Compiler Flags ---
 # -nostdlib: No standard C library (we're bare-metal)
@@ -20,7 +21,7 @@ ARCH_FLAGS = -march=rv64gcv -mabi=lp64d
 # -Wall: Enable all warnings
 # -I.: Add current directory to include paths
 # -D__riscv_vector: Explicitly define for C code if needed (GCC usually defines it if -march includes 'v')
-# -fno-builtin: Prevents GCC from using built-in functions that might rely on libc (e.g., memcpy, printf)
+# -fno-builtin: Prevents GCC from using built-in functions that might rely on libc (e.g., memcpy, uart_puts)
 # -fomit-frame-pointer: Often used in embedded to save space
 # -mno-relax: Crucial for RISC-V bare-metal to prevent certain linker optimizations that cause HI20 errors
 # Removed -mno-gpopt as it was unrecognized by your toolchain

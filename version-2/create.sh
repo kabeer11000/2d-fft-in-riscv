@@ -54,7 +54,7 @@ void uart_puts(const char* s);
 // Transmit a hexadecimal number (64-bit)
 void uart_puthex(uint64_t val);
 
-// Transmit a floating-point number (basic, without full printf support)
+// Transmit a floating-point number (basic, without full uart_puts support)
 void uart_putdouble(double val);
 
 #endif // UART_H
@@ -615,7 +615,7 @@ ARCH_FLAGS = -march=rv64gcv -mabi=lp64d
 # -Wall: Enable all warnings
 # -I.: Add current directory to include paths
 # -D__riscv_vector: Explicitly define for C code if needed (GCC usually defines it if -march includes 'v')
-# -fno-builtin: Prevents GCC from using built-in functions that might rely on libc (e.g., memcpy, printf)
+# -fno-builtin: Prevents GCC from using built-in functions that might rely on libc (e.g., memcpy, uart_puts)
 # -fomit-frame-pointer: Often used in embedded to save space
 # -mno-relax: Crucial for RISC-V bare-metal to prevent certain linker optimizations that cause HI20 errors
 # Removed -mno-gpopt as it was unrecognized by your toolchain

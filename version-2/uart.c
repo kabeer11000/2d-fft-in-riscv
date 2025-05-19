@@ -25,6 +25,8 @@ void uart_puts(const char* s) {
     }
 }
 
+// The rest of your uart_puthex and uart_putdouble are fine.
+
 // Transmit a hexadecimal number (64-bit)
 void uart_puthex(uint64_t val) {
     char hex_digits[] = "0123456789abcdef";
@@ -46,11 +48,6 @@ void uart_puthex(uint64_t val) {
         uart_putc(buf[i]);
     }
 }
-
-// Transmit a floating-point number (very basic, for demonstration)
-// This implementation avoids full stdio.h dependency, but is limited.
-// For bare-metal, full double printing is usually complex (requires custom dtoa).
-// We'll print integer and fractional parts separately.
 void uart_putdouble(double val) {
     if (val < 0) {
         uart_putc('-');
@@ -58,29 +55,29 @@ void uart_putdouble(double val) {
     }
 
     uint64_t integer_part = (uint64_t)val;
-    double fractional_part = val - integer_part;
+    double fractional_part = val - (double)integer_part;
 
     // Print integer part
     if (integer_part == 0) {
         uart_putc('0');
     } else {
-        char buf[20]; // Max for 64-bit unsigned
+        char buf[20];
         int i = 0;
         uint64_t temp = integer_part;
         while (temp > 0) {
             buf[i++] = (temp % 10) + '0';
             temp /= 10;
         }
-        for (i--; i >= 0; i--) {
+        for (i = i - 1; i >= 0; i--) {
             uart_putc(buf[i]);
         }
     }
 
     uart_putc('.');
 
-    // Print fractional part (e.g., 6 decimal places)
+    // Print fractional part (6 digits)
     for (int i = 0; i < 6; ++i) {
-        fractional_part *= 10;
+        fractional_part *= 10.0;
         int digit = (int)fractional_part;
         uart_putc(digit + '0');
         fractional_part -= digit;

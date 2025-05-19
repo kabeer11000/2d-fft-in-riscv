@@ -15,7 +15,7 @@ void uart_puts(const char* s);
 // Transmit a hexadecimal number (64-bit)
 void uart_puthex(uint64_t val);
 
-// Transmit a floating-point number (basic, without full printf support)
+// Transmit a floating-point number (basic, without full uart_puts support)
 void uart_putdouble(double val);
 
 #endif // UART_H

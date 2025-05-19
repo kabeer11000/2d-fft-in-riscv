@@ -1,30 +1,29 @@
 .section .text.init,"ax",@progbits
 .global _start
 _start:
-_start:
-
-    /* Set up global pointer */
+    /* Set up global pointer (optional, comment out if not needed) */
     .option push
     .option norelax
     la gp, __global_pointer$
     .option pop
 
-    /* Set up stack pointer (at the very top of RAM) */
-    la sp, _stack_top
+    /* Set up stack pointer */
+    .option push
+    .option norelax
+    lla sp, _stack_top
+    .option pop
 
     /* Clear BSS section */
     la a0, _bss_start
     la a1, _bss_end
-    bgeu a0, a1, 2f /* Skip if BSS is empty or invalid */
+    bgeu a0, a1, 2f
 1:
-    sd zero, (a0)   /* Store zero double-word (8 bytes) */
-    addi a0, a0, 8  /* Increment pointer by 8 bytes */
-    bltu a0, a1, 1b /* Loop until end of BSS */
+    sd zero, (a0)
+    addi a0, a0, 8
+    bltu a0, a1, 1b
 2:
 
-    /* Call the C entry point */
     call main
 
-    /* Infinite loop after main returns (should not happen in bare-metal) */
 .loop_end:
     j .loop_end
